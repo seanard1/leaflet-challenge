@@ -23,11 +23,11 @@ function createFeatures(earthquakeData) {
   
     function onEachFeature (feature, layer) {
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString
+      // https://stackoverflow.com/questions/11832914/how-to-round-to-at-most-2-decimal-places-if-necessary
       layer.bindPopup(`<h3>${feature.properties.place}</h3><hr>\
         <p>When: ${new Date(feature.properties.time).toLocaleDateString()}<br />\
         Magnitude: ${feature.properties.mag}<br />\
-        Depth: ${feature.geometry.coordinates[2]}</p>`);
-      console.log(feature.geometry.coordinates[2]);
+        Depth: ${Math.round(feature.geometry.coordinates[2]*100)/100}</p>`);
     };
     
 
@@ -58,8 +58,8 @@ function createMap(earthquakes) {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     });
   
-    let topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-      attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+    let grayScale = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
     });
 
     // https://github.com/leaflet-extras/leaflet-providers
@@ -70,7 +70,7 @@ function createMap(earthquakes) {
     
     let baseMaps = {
       "Street Map": street,
-      "Topographic Map": topo,
+      "Grayscale Map": grayScale,
       "Relief Map": relief
     };
   
@@ -78,14 +78,12 @@ function createMap(earthquakes) {
       Quakes: earthquakes
     };
   
-    // Create a new map.
-    // Edit the code to add the earthquake data to the layers.
     let myMap = L.map("map", {
       center: [
         47.09, -110.71
       ],
       zoom: 4,
-      layers: [relief, earthquakes]
+      layers: [grayScale, earthquakes]
     });
 
     // https://codepen.io/haakseth/pen/KQbjdO
@@ -96,9 +94,11 @@ function createMap(earthquakes) {
 
         div.innerHTML += "<h3 style='text-align: center'>Quake depth</h3>"
 
+        // https://stackoverflow.com/questions/21391824/what-does-mean-in-the-parameters-of-a-for-loop-in-javascript
         for (var i = 0; i < depth.length; i++) {
             div.innerHTML +=
             '<i style="background:' + color(depth[i] + 1) + '"></i> ' + depth[i] + (depth[i + 1] ? ' to ' + depth[i + 1] + '<br>' : '-plus');
+            console.log(depth[i + 1]);
         }
     console.log(div);
     return div;
