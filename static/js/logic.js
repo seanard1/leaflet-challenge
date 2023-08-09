@@ -5,7 +5,7 @@ let queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_da
 let color = d3.scaleLinear().domain([0,100]).range(['green', 'red']).clamp(true);
 
 let platesURL = 'https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json';
-
+let tectonicPlates = new L.layerGroup();
 
 d3.json(queryUrl).then(function (data) {
 
@@ -23,9 +23,10 @@ function createFeatures(earthquakeData) {
   
     function onEachFeature (feature, layer) {
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString
+      // https://stackoverflow.com/questions/85116/display-date-time-in-users-locale-format-and-time-offset
       // https://stackoverflow.com/questions/11832914/how-to-round-to-at-most-2-decimal-places-if-necessary
       layer.bindPopup(`<h3>${feature.properties.place}</h3><hr>\
-        <p>When: ${new Date(feature.properties.time).toLocaleDateString()}<br />\
+        <p>When: ${new Date(feature.properties.time).toLocaleDateString()} ${new Date(feature.properties.time).toLocaleTimeString()}<br />\
         Magnitude: ${feature.properties.mag}<br />\
         Depth: ${Math.round(feature.geometry.coordinates[2]*100)/100}</p>`);
     };
@@ -75,7 +76,8 @@ function createMap(earthquakes) {
     };
   
     let overlayMaps = {
-      Quakes: earthquakes
+      Quakes: earthquakes,
+      'Tectonic Plates': tectonicPlates
     };
   
     let myMap = L.map("map", {
@@ -105,9 +107,14 @@ function createMap(earthquakes) {
     };
     legend.addTo(myMap)
   
+    d3.json(platesURL).then(function(plateTrace) {
+      L.geoJSON(plateTrace).addTo(tectonicPlates);
+      tectonicPlates.addTo(myMap);
+    });
 
     L.control.layers(baseMaps, overlayMaps, {
       collapsed: false
     }).addTo(myMap);
   
 };
+
